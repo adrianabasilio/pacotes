@@ -281,8 +281,11 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
   </section>
   <div class="filtros-container">
     <span class="filtros-label">Filtrar</span>
-    <select class="filtro-select" id="filtro-destino" onchange="aplicarFiltros()">
-      <option value="">Todos os destinos</option>
+    <input type="text" class="filtro-select" id="filtro-busca" placeholder="Buscar destino..." oninput="aplicarFiltros()" style="min-width:200px"/>
+    <select class="filtro-select" id="filtro-tipo" onchange="aplicarFiltros()">
+      <option value="">Nacional e Internacional</option>
+      <option value="nacional">Nacionais</option>
+      <option value="internacional">Internacionais</option>
     </select>
     <select class="filtro-select" id="filtro-preco" onchange="aplicarFiltros()">
       <option value="">Qualquer valor</option>
@@ -298,7 +301,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
       <option value="90">Próximos 90 dias</option>
       <option value="180">Próximos 6 meses</option>
     </select>
-    <button class="filtro-limpar" onclick="limparFiltros()">Limpar filtros</button>
+    <button class="filtro-limpar" onclick="limparFiltros()">Limpar</button>
   </div>
   <main class="main" id="conteudo-principal">
     <div class="loading" id="loading-publico">Carregando pacotes...</div>
@@ -413,6 +416,13 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
             <select class="form-input" id="campo-transfer">
               <option value="false">Não</option>
               <option value="true">Sim</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo de destino</label>
+            <select class="form-input" id="campo-nacional">
+              <option value="false">Internacional</option>
+              <option value="true">Nacional</option>
             </select>
           </div>
           <div class="form-group campo-full">
@@ -737,8 +747,8 @@ async function salvarPacote() {
   const hotel = document.getElementById('campo-hotel').value.trim();
   const precoTotal = parseMoeda(document.getElementById('campo-preco').value);
 
-  if (!destino || !hotel || !precoTotal) {
-    erro.textContent = 'Preencha ao menos destino, hotel e preço.';
+  if (!destino) {
+    erro.textContent = 'Preencha ao menos o destino.';
     erro.style.display = 'block'; return;
   }
 
@@ -754,6 +764,7 @@ async function salvarPacote() {
     parcelas: parseInt(document.getElementById('campo-parcelas').value) || 1,
     valor_parcela: parseMoeda(document.getElementById('campo-valor-parcela').value),
     transfer: document.getElementById('campo-transfer').value === 'true',
+    nacional: document.getElementById('campo-nacional').value === 'true',
     inclusos,
     informacoes_extras: document.getElementById('campo-extras').value.trim(),
     descricao: document.getElementById('campo-descricao').value.trim(),
@@ -806,6 +817,7 @@ function limparFormulario() {
     document.getElementById(id).value = '';
   });
   document.getElementById('campo-transfer').value = 'false';
+  document.getElementById('campo-nacional').value = 'false';
   document.querySelectorAll('#inclusos-group input').forEach(cb => cb.checked = false);
   document.getElementById('form-campos').style.display = 'none';
   document.getElementById('upload-preview').style.display = 'none';
@@ -845,6 +857,7 @@ async function editarPacote(id) {
   document.getElementById('campo-parcelas').value = p.parcelas || '';
   document.getElementById('campo-valor-parcela').value = (p.valor_parcela||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
   document.getElementById('campo-transfer').value = p.transfer ? 'true' : 'false';
+  document.getElementById('campo-nacional').value = p.nacional ? 'true' : 'false';
   document.getElementById('campo-extras').value = p.informacoes_extras || '';
   document.getElementById('campo-descricao').value = p.descricao || '';
 
@@ -873,49 +886,61 @@ async function carregarPacotesPublicos() {
 }
 
 function popularFiltros(pacotes) {
-  const destinos = [...new Set(pacotes.map(p => p.destino))].sort();
-  const sel = document.getElementById('filtro-destino');
-  sel.innerHTML = '<option value="">Todos os destinos</option>';
-  destinos.forEach(d => { const o = document.createElement('option'); o.value = d; o.textContent = d; sel.appendChild(o); });
+  // filtro agora é busca livre, sem popular select
 }
 
 function aplicarFiltros() {
   let f = [...todosPacotes];
-  const dest = document.getElementById('filtro-destino').value;
+  const busca = (document.getElementById('filtro-busca').value || '').toLowerCase().trim();
+  const tipo = document.getElementById('filtro-tipo').value;
   const preco = document.getElementById('filtro-preco').value;
   const data = document.getElementById('filtro-data').value;
-  if (dest) f = f.filter(p => p.destino === dest);
+  if (busca) f = f.filter(p => p.destino.toLowerCase().includes(busca) || (p.hotel||'').toLowerCase().includes(busca) || (p.descricao||'').toLowerCase().includes(busca) || (p.informacoes_extras||'').toLowerCase().includes(busca));
+  if (tipo === 'nacional') f = f.filter(p => p.nacional);
+  if (tipo === 'internacional') f = f.filter(p => !p.nacional);
   if (preco) { const [min,max] = preco.split('-').map(Number); f = f.filter(p => p.preco_por_pessoa >= min && p.preco_por_pessoa <= max); }
   if (data) { const lim = new Date(); lim.setDate(lim.getDate()+parseInt(data)); f = f.filter(p => !p.periodo_inicio || new Date(p.periodo_inicio) <= lim); }
   renderizarPacotes(f);
 }
 
 function limparFiltros() {
-  ['filtro-destino','filtro-preco','filtro-data'].forEach(id => document.getElementById(id).value = '');
+  ['filtro-busca','filtro-preco','filtro-data'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('filtro-tipo').value = '';
   renderizarPacotes(todosPacotes);
 }
 
 function renderizarPacotes(pacotes) {
   const container = document.getElementById('pacotes-container');
-  if (!pacotes.length) { container.innerHTML = '<div class="empty-state"><p>Nenhum pacote encontrado.</p></div>'; return; }
-  const porDestino = {};
-  pacotes.forEach(p => { if (!porDestino[p.destino]) porDestino[p.destino] = []; porDestino[p.destino].push(p); });
-  container.innerHTML = Object.entries(porDestino).map(([dest, lista]) => `
-    <section class="destino-section">
+  if (!pacotes.length) { container.innerHTML = '<div class="empty-state"><p>Nenhum pacote encontrado.</p></div>'; return;  }
+  const nacionais = pacotes.filter(p => p.nacional);
+  const internacionais = pacotes.filter(p => !p.nacional);
+  let html = '';
+  if (nacionais.length) {
+    html += `<section class="destino-section">
       <div class="destino-header">
-        <h2 class="destino-nome">${dest}</h2>
-        <span class="destino-count">${lista.length} ${lista.length===1?'opção':'opções'}</span>
+        <h2 class="destino-nome">🇧🇷 Destinos Nacionais</h2>
+        <span class="destino-count">${nacionais.length} ${nacionais.length===1?'opção':'opções'}</span>
       </div>
-      <div class="cards-grid">${lista.map(p => cardHTML(p)).join('')}</div>
-    </section>
-  `).join('');
+      <div class="cards-grid">${nacionais.map(p => cardHTML(p)).join('')}</div>
+    </section>`;
+  }
+  if (internacionais.length) {
+    html += `<section class="destino-section">
+      <div class="destino-header">
+        <h2 class="destino-nome">✈️ Destinos Internacionais</h2>
+        <span class="destino-count">${internacionais.length} ${internacionais.length===1?'opção':'opções'}</span>
+      </div>
+      <div class="cards-grid">${internacionais.map(p => cardHTML(p)).join('')}</div>
+    </section>`;
+  }
+  container.innerHTML = html;
 }
 
 function cardHTML(p) {
   const inicio = p.periodo_inicio ? formatarDataExibicao(p.periodo_inicio) : null;
   const fim = p.periodo_fim ? formatarDataExibicao(p.periodo_fim) : null;
   const periodo = inicio && fim ? `${inicio} → ${fim}` : 'Consulte datas';
-  const preco = p.preco_por_pessoa ? `R$ ${p.preco_por_pessoa.toLocaleString('pt-BR',{minimumFractionDigits:0})}` : 'Consultar';
+  const preco = p.preco_por_pessoa ? `R$ ${parseFloat(p.preco_por_pessoa).toLocaleString('pt-BR',{minimumFractionDigits:0})}` : 'Consultar';
   const img = p.imagem_url || (p.fotos && p.fotos[0]) || '';
   const inclusos = (p.inclusos||[]).map(i => `<span class="tag-incluso">${i}</span>`).join('');
   const transferTag = p.transfer ? `<span class="tag-incluso tag-transfer">Transfer</span>` : '';
@@ -962,7 +987,7 @@ async function abrirModal(id) {
   const inicio = p.periodo_inicio ? formatarDataExibicao(p.periodo_inicio) : 'Consulte';
   const fim = p.periodo_fim ? formatarDataExibicao(p.periodo_fim) : '';
   const periodo = inicio && fim ? `${inicio} — ${fim}` : inicio;
-  const preco = p.preco_por_pessoa ? `R$ ${p.preco_por_pessoa.toLocaleString('pt-BR',{minimumFractionDigits:0})}` : 'Consultar';
+  const preco = p.preco_por_pessoa ? `R$ ${parseFloat(p.preco_por_pessoa).toLocaleString('pt-BR',{minimumFractionDigits:0})}` : 'Consultar';
   const msg = encodeURIComponent(`Olá, Adriana! Tenho interesse no pacote para *${p.destino}*. Poderia me passar mais detalhes?`);
   const inclusos = (p.inclusos||[]).map(i => `<span class="tag-incluso">${i}</span>`).join('');
   const transferTag = p.transfer ? `<span class="tag-incluso tag-transfer">Transfer</span>` : '';
@@ -974,7 +999,10 @@ async function abrirModal(id) {
     ${fotosPrincipal ? `<img class="modal-foto-principal" src="${fotosPrincipal}" alt="${p.destino}"/>` : ''}
     ${fotosExtra.length ? `<div class="modal-fotos-grid">${fotosExtra.map(f => `<img src="${f}" alt="${p.destino}"/>`).join('')}</div>` : ''}
     <div class="modal-body">
-      <h2 class="modal-destino">${p.destino}</h2>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+        <h2 class="modal-destino" style="margin-bottom:0">${p.destino}</h2>
+        <img src="https://vezyeaixfudjkrdjpawb.supabase.co/storage/v1/object/public/Images/Adriana_Travel_Designer_3.png" alt="Adriana Basilio Travel Designer" style="height:28px;width:auto;opacity:0.7;flex-shrink:0;margin-left:16px;"/>
+      </div>
       <p class="modal-hotel">${p.hotel}</p>
       <div class="modal-infos">
         <div class="modal-info-item"><span class="modal-info-label">Período</span><span class="modal-info-valor">${periodo}</span></div>
