@@ -360,7 +360,10 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
             <p class="upload-texto" style="font-size:12px;margin-top:6px;opacity:0.6">JPG, PNG ou WebP</p>
           </div>
         </div>
-        <div class="upload-preview" id="upload-preview"><img id="preview-img" src="" alt=""/></div>
+        <div class="upload-preview" id="upload-preview">
+          <img id="preview-img" src="" alt=""/>
+          <button onclick="removerLamina()" style="margin-top:10px;background:none;border:1px solid #ef4444;color:#ef4444;border-radius:6px;padding:6px 14px;font-family:var(--font);font-size:12px;cursor:pointer;">✕ Remover lâmina</button>
+        </div>
         <div class="btns-acao">
           <button class="btn-extrair" id="btn-extrair" onclick="extrairDados()" disabled>✨ Extrair com IA</button>
           <button class="btn-secundario" onclick="mostrarFormulario()">✏️ Preencher manualmente</button>
@@ -556,6 +559,15 @@ function processarArquivo(file) {
   };
   reader.readAsDataURL(file);
 }
+function removerLamina() {
+  imagemBase64 = null;
+  imagemMediaType = null;
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('btn-extrair').disabled = true;
+  document.getElementById('input-lamina').value = '';
+}
+
 function mostrarFormulario() {
   document.getElementById('form-campos').style.display = 'block';
   document.getElementById('form-campos').scrollIntoView({ behavior:'smooth' });
@@ -972,6 +984,7 @@ async function abrirModal(id) {
       <div class="modal-inclusos">${inclusos}${transferTag}</div>
       ${p.informacoes_extras ? `<p class="modal-descricao">${p.informacoes_extras}</p>` : ''}
       ${p.descricao ? `<p class="modal-descricao">${p.descricao}</p>` : ''}
+      <p class="modal-descricao" style="font-size:11px;opacity:0.6;margin-top:8px">Valores em reais por pessoa em apartamento duplo. Sujeito a alterações e disponibilidade sem aviso prévio.</p>
       <div class="modal-preco-area">
         <div>
           <div class="modal-preco-valor">${p.parcelas > 1 ? `${p.parcelas}x de R$ ${(p.valor_parcela||0).toLocaleString("pt-BR",{minimumFractionDigits:2})}` : preco}<span style="font-size:14px;font-weight:300;color:var(--cinza-texto)">${p.parcelas > 1 ? "" : " / pessoa"}</span></div>
