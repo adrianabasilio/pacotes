@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Clube Turismo — Adriana Basilio | Pacotes Selecionados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300;400;500;600&family=Google+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+<style>
+  :root {
+    --azul: #2e3092;
+    --ceu: #c6eefa;
+    --branco: #ffffff;
+    --cinza-claro: #f5f7fa;
+    --cinza-texto: #6b7280;
+    --cinza-borda: #e5e7eb;
+    --preto-suave: #1a1a2e;
+    --dourado: #b8973a;
+    --font: 'Google Sans Flex', 'Google Sans', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font);
+    background: var(--branco);
+    color: var(--preto-suave);
+    min-height: 100vh;
+  }
+
+  /* ── PÁGINA PÚBLICA ── */
+  #pagina-publica { display: block; }
+  #pagina-admin { display: none; }
+  #pagina-login { display: none; }
+
+  /* HEADER */
+  .header {
+    background: var(--branco);
+    padding: 16px 40px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--cinza-borda);
+    box-shadow: 0 1px 4px rgba(46,48,146,0.06);
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+  }
+  .header-admin-btn {
+    color: var(--azul);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity 0.2s;
+    background: none;
+    border: none;
+    font-family: var(--font);
+  }
+  .header-admin-btn:hover { opacity: 1; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, var(--azul) 0%, #1a1d6e 100%);
+    padding: 80px 40px 70px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 300px; height: 300px;
+    background: var(--ceu);
+    opacity: 0.06;
+    border-radius: 50%;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -40px;
+    width: 200px; height: 200px;
+    background: var(--ceu);
+    opacity: 0.04;
+    border-radius: 50%;
+  }
+  .hero-eyebrow {
+    color: var(--ceu);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    font-weight: 300;
+    margin-bottom: 20px;
+    opacity: 0.8;
+  }
+  .hero h1 {
+    color: var(--branco);
+    font-size: 42px;
+    font-weight: 300;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+  .hero h1 strong {
+    font-weight: 600;
+    color: var(--ceu);
+  }
+  .hero p {
+    color: rgba(255,255,255,0.65);
+    font-size: 16px;
+    font-weight: 300;
+    max-width: 480px;
+    margin: 0 auto;
+    line-height: 1.6;
+  }
+
+  /* FILTROS */
+  .filtros-container {
+    background: var(--branco);
+    border-bottom: 1px solid var(--cinza-borda);
+    padding: 20px 40px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    position: sticky;
+    top: 72px;
+    z-index: 90;
+  }
+  .filtros-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cinza-texto);
+    font-weight: 500;
+    margin-right: 4px;
+  }
+  .filtro-select {
+    border: 1px solid var(--cinza-borda);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--preto-suave);
+    background: var(--branco);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 160px;
+  }
+  .filtro-select:focus { border-color: var(--azul); }
+  .filtro-limpar {
+    font-size: 12px;
+    color: var(--azul);
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font);
+    padding: 8px 4px;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+  }
+  .filtro-limpar:hover { opacity: 1; }
+
+  /* CONTEÚDO PRINCIPAL */
+  .main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 48px 40px 80px;
+  }
+
+  /* SEÇÃO POR DESTINO */
+  .destino-section {
+    margin-bottom: 64px;
+  }
+  .destino-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--cinza-borda);
+  }
+  .destino-nome {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--azul);
+    letter-spacing: -0.3px;
+  }
+  .destino-count {
+    font-size: 11px;
+    color: var(--cinza-texto);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: var(--cinza-claro);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* GRID DE CARDS */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+  }
+
+  /* CARD */
+  .card {
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 48px rgba(46,48,146,0.1);
+  }
+  .card-imagem {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+    background: linear-gradient(135deg, var(--ceu) 0%, #a8d8f0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--azul);
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+  .card-imagem img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .card-body {
+    padding: 24px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-destino {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--azul);
+    margin-bottom: 4px;
+    letter-spacing: -0.2px;
+  }
+  .card-hotel {
+    font-size: 13px;
+    color: var(--cinza-texto);
+    margin-bottom: 16px;
+    font-weight: 300;
+  }
+  .card-infos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .card-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .card-info-label {
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--cinza-texto);
+    font-weight: 400;
+  }
+  .card-info-valor {
+    font-size: 13px;
+    color: var(--preto-suave);
+    font-weight: 400;
+  }
+  .card-inclusos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+    flex: 1;
+  }
+  .tag-incluso {
+    font-size: 11px;
+    background: var(--cinza-claro);
+    color: var(--cinza-texto);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 400;
+  }
+  .tag-transfer {
+    background: #eef2ff;
+    color: var(--azul);
+  }
+  .card-footer {
+    border-top: 1px solid var(--cinza-borda);
+    padding-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .card-preco {
+    display: flex;
+    flex-direction: column;
+  }
+  .card-preco-label {
+    font-size: 10px;
+    color: var(--cinza-texto);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .card-preco-valor {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--azul);
+    letter-spacing: -0.5px;
+  }
+  .card-preco-pp {
+    font-size: 11px;
+    color: var(--cinza-texto);
+    font-weight: 300;
+  }
+  .card-preco-parcela {
+    font-size: 11px;
+    color: var(--cinza-texto);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+  .btn-whatsapp {
+    background: #25D366;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 18px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.1s;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-whatsapp:hover { background: #20b856; }
+  .btn-whatsapp:active { transform: scale(0.97); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--cinza-texto);
+  }
+  .empty-state p { font-size: 15px; font-weight: 300; }
+
+  /* LOADING */
+  .loading {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--cinza-texto);
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+
+  /* ── PÁGINA DE LOGIN ── */
+  #pagina-login {
+    min-height: 100vh;
+    background: var(--azul);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-card {
+    background: var(--branco);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 380px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.25);
+  }
+  .login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+    display: flex;
+    justify-content: center;
+  }
+  .login-titulo {
+    font-size: 14px;
+    color: var(--cinza-texto);
+    text-align: center;
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--cinza-texto);
+    margin-bottom: 8px;
+    font-weight: 500;
+  }
+  .form-input {
+    width: 100%;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--preto-suave);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--azul); }
+  .btn-primary {
+    width: 100%;
+    background: var(--azul);
+    color: var(--branco);
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary:hover { opacity: 0.88; }
+  .login-erro {
+    color: #ef4444;
+    font-size: 13px;
+    text-align: center;
+    margin-top: 12px;
+    display: none;
+  }
+  .login-voltar {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 12px;
+    color: var(--cinza-texto);
+    cursor: pointer;
+  }
+  .login-voltar span {
+    color: var(--azul);
+    cursor: pointer;
+  }
+  .login-voltar span:hover { text-decoration: underline; }
+
+  /* ── ÁREA ADMIN ── */
+  #pagina-admin {
+    min-height: 100vh;
+    background: var(--cinza-claro);
+  }
+  .admin-header {
+    background: var(--azul);
+    padding: 0 40px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .admin-header-titulo {
+    color: var(--branco);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  .admin-header-titulo span {
+    color: var(--ceu);
+    font-size: 11px;
+    font-weight: 300;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    display: block;
+  }
+  .btn-sair {
+    background: rgba(255,255,255,0.12);
+    color: var(--branco);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: var(--font);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .btn-sair:hover { background: rgba(255,255,255,0.2); }
+
+  .admin-main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 40px;
+  }
+  .admin-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 32px;
+    background: var(--cinza-borda);
+    border-radius: 10px;
+    padding: 3px;
+    width: fit-content;
+  }
+  .admin-tab {
+    padding: 10px 24px;
+    border-radius: 8px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--cinza-texto);
+    transition: all 0.2s;
+  }
+  .admin-tab.ativo {
+    background: var(--branco);
+    color: var(--azul);
+    font-weight: 500;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+
+  /* FORMULÁRIO DE CADASTRO */
+  .admin-card {
+    background: var(--branco);
+    border-radius: 12px;
+    padding: 36px;
+    border: 1px solid var(--cinza-borda);
+    margin-bottom: 24px;
+  }
+  .admin-card-titulo {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--azul);
+    margin-bottom: 6px;
+  }
+  .admin-card-subtitulo {
+    font-size: 13px;
+    color: var(--cinza-texto);
+    margin-bottom: 28px;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  /* UPLOAD DE LÂMINA */
+  .upload-area {
+    border: 2px dashed var(--cinza-borda);
+    border-radius: 10px;
+    padding: 40px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--cinza-claro);
+    margin-bottom: 28px;
+    position: relative;
+  }
+  .upload-area:hover, .upload-area.drag-over {
+    border-color: var(--azul);
+    background: #f0f1ff;
+  }
+  .upload-area input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .upload-icone {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+  .upload-texto {
+    font-size: 14px;
+    color: var(--cinza-texto);
+    font-weight: 300;
+  }
+  .upload-texto strong {
+    color: var(--azul);
+    font-weight: 500;
+  }
+  .upload-preview {
+    display: none;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .upload-preview img {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+    border: 1px solid var(--cinza-borda);
+  }
+  .btn-extrair {
+    background: var(--azul);
+    color: var(--branco);
+    border: none;
+    border-radius: 8px;
+    padding: 13px 24px;
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto;
+  }
+  .btn-extrair:hover { opacity: 0.88; }
+  .btn-extrair:disabled { opacity: 0.5; cursor: not-allowed; }
+  .extraindo-status {
+    text-align: center;
+    font-size: 13px;
+    color: var(--cinza-texto);
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* FORMULÁRIO DE CAMPOS */
+  .campos-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .campo-full { grid-column: 1 / -1; }
+  .form-textarea {
+    width: 100%;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: var(--font);
+    font-size: 14px;
+    color: var(--preto-suave);
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+  .form-textarea:focus { border-color: var(--azul); }
+  .form-checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .form-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--preto-suave);
+  }
+  .form-checkbox-item input { accent-color: var(--azul); }
+  .btn-salvar {
+    background: var(--azul);
+    color: var(--branco);
+    border: none;
+    border-radius: 8px;
+    padding: 14px 32px;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    margin-top: 8px;
+  }
+  .btn-salvar:hover { opacity: 0.88; }
+  .form-sucesso {
+    color: #16a34a;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+  .form-erro {
+    color: #ef4444;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+
+  /* LISTA DE PACOTES ADMIN */
+  .pacotes-admin-lista { display: flex; flex-direction: column; gap: 12px; }
+  .pacote-admin-item {
+    background: var(--branco);
+    border: 1px solid var(--cinza-borda);
+    border-radius: 10px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .pacote-admin-info { flex: 1; }
+  .pacote-admin-destino {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--azul);
+    margin-bottom: 3px;
+  }
+  .pacote-admin-detalhe {
+    font-size: 12px;
+    color: var(--cinza-texto);
+  }
+  .pacote-admin-preco {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--azul);
+    margin-right: 16px;
+  }
+  .pacote-admin-acoes { display: flex; gap: 8px; }
+  .btn-arquivar {
+    background: none;
+    border: 1px solid var(--cinza-borda);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: var(--font);
+    font-size: 12px;
+    color: var(--cinza-texto);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-arquivar:hover { border-color: #ef4444; color: #ef4444; }
+  .status-ativo {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+    margin-right: 6px;
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 32px;
+    font-size: 12px;
+    color: var(--cinza-texto);
+    border-top: 1px solid var(--cinza-borda);
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 768px) {
+    .header { padding: 0 20px; }
+    .hero { padding: 52px 20px 48px; }
+    .hero h1 { font-size: 28px; }
+    .filtros-container { padding: 16px 20px; }
+    .main { padding: 32px 20px 60px; }
+    .cards-grid { grid-template-columns: 1fr; }
+    .campos-grid { grid-template-columns: 1fr; }
+    .admin-main { padding: 24px 20px; }
+    .login-card { width: 90%; padding: 36px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ PÁGINA PÚBLICA ══════════════ -->
+<div id="pagina-publica">
+  <header class="header">
+    <div class="header-logo">
+      <img src="https://vezyeaixfudjkrdjpawb.supabase.co/storage/v1/object/public/Images/Adriana_Travel_Designer_1.png" alt="Clube Turismo — Adriana Basilio Travel Designer" style="width:280px;height:auto;object-fit:contain;display:block;"/>
+    </div>
+    <button class="header-admin-btn" onclick="mostrarLogin()" style="position:absolute;right:40px;">Admin</button>
+  </header>
+
+  <section class="hero">
+    <p class="hero-eyebrow">Oportunidades selecionadas por mim, para você</p>
+    <h1>Viagens com <strong>curadoria real</strong>.<br/>Preços que valem a viagem.</h1>
+    <p>Cada pacote aqui foi escolhido com cuidado. Melhores hotéis, voos bloqueados com tarifas exclusivas e tudo que você precisa para viver essa experiência.</p>
+  </section>
+
+  <div class="filtros-container">
+    <span class="filtros-label">Filtrar</span>
+    <select class="filtro-select" id="filtro-destino" onchange="aplicarFiltros()">
+      <option value="">Todos os destinos</option>
+    </select>
+    <select class="filtro-select" id="filtro-preco" onchange="aplicarFiltros()">
+      <option value="">Qualquer valor</option>
+      <option value="0-3000">Até R$ 3.000</option>
+      <option value="3000-6000">R$ 3.000 a R$ 6.000</option>
+      <option value="6000-10000">R$ 6.000 a R$ 10.000</option>
+      <option value="10000-99999">Acima de R$ 10.000</option>
+    </select>
+    <select class="filtro-select" id="filtro-data" onchange="aplicarFiltros()">
+      <option value="">Qualquer data</option>
+      <option value="30">Próximos 30 dias</option>
+      <option value="60">Próximos 60 dias</option>
+      <option value="90">Próximos 90 dias</option>
+      <option value="180">Próximos 6 meses</option>
+    </select>
+    <button class="filtro-limpar" onclick="limparFiltros()">Limpar filtros</button>
+  </div>
+
+  <main class="main" id="conteudo-principal">
+    <div class="loading" id="loading-publico">Carregando pacotes...</div>
+    <div id="pacotes-container"></div>
+  </main>
+
+  <footer class="footer">
+    © 2024 Clube Turismo — Adriana Basilio Travel Designer · @adrianaviagem
+  </footer>
+</div>
+
+<!-- ══════════════ LOGIN ══════════════ -->
+<div id="pagina-login">
+  <div class="login-card">
+    <div class="login-logo">
+      <img src="https://vezyeaixfudjkrdjpawb.supabase.co/storage/v1/object/public/Images/Adriana_Travel_Designer_1.png" alt="Clube Turismo — Adriana Basilio Travel Designer" style="width:200px;height:auto;margin-bottom:8px;"/>
+    </div>
+    <p class="login-titulo">Área administrativa</p>
+    <div class="form-group">
+      <label class="form-label">E-mail</label>
+      <input type="email" class="form-input" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter') fazerLogin()"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Senha</label>
+      <input type="password" class="form-input" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter') fazerLogin()"/>
+    </div>
+    <button class="btn-primary" onclick="fazerLogin()" id="btn-login">Entrar</button>
+    <p class="login-erro" id="login-erro">E-mail ou senha incorretos.</p>
+    <p class="login-voltar">Voltar para <span onclick="mostrarPublico()">página de pacotes</span></p>
+  </div>
+</div>
+
+<!-- ══════════════ ÁREA ADMIN ══════════════ -->
+<div id="pagina-admin">
+  <header class="admin-header">
+    <div class="admin-header-titulo">
+      <span>Área Administrativa</span>
+      Clube Turismo — Adriana Basilio
+    </div>
+    <button class="btn-sair" onclick="sair()">Sair</button>
+  </header>
+
+  <div class="admin-main">
+    <div class="admin-tabs">
+      <button class="admin-tab ativo" onclick="mostrarTab('cadastro', this)">Novo pacote</button>
+      <button class="admin-tab" onclick="mostrarTab('lista', this)">Pacotes ativos</button>
+    </div>
+
+    <!-- TAB: CADASTRO -->
+    <div id="tab-cadastro">
+      <div class="admin-card">
+        <h2 class="admin-card-titulo">Cadastrar novo pacote</h2>
+        <p class="admin-card-subtitulo">Envie a imagem da lâmina do fornecedor para extração automática, ou preencha os campos manualmente. A imagem é opcional — se não enviar, buscamos uma foto automaticamente pelo destino.</p>
+
+        <div class="upload-area" id="upload-area" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="drop(event)">
+          <input type="file" accept="image/*" id="input-lamina" onchange="selecionouArquivo(event)"/>
+          <div id="upload-placeholder">
+            <div class="upload-icone">🗂️</div>
+            <p class="upload-texto"><strong>Clique ou arraste</strong> a imagem da lâmina aqui <span style="opacity:0.5">(opcional)</span></p>
+            <p class="upload-texto" style="font-size:12px;margin-top:6px;opacity:0.6">JPG, PNG ou WebP · Máximo 10MB</p>
+          </div>
+        </div>
+
+        <div class="upload-preview" id="upload-preview">
+          <img id="preview-img" src="" alt="Lâmina"/>
+        </div>
+
+        <div style="text-align:center;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+          <button class="btn-extrair" id="btn-extrair" onclick="extrairDados()" disabled>
+            <span>✨</span> Extrair informações com IA
+          </button>
+          <button class="btn-extrair" id="btn-preencher-manual" onclick="mostrarFormularioManual()" style="background:var(--cinza-texto)">
+            <span>✏️</span> Preencher manualmente
+          </button>
+        </div>
+        <p class="extraindo-status" id="extraindo-status">Analisando a lâmina... aguarde alguns segundos.</p>
+      </div>
+
+      <!-- FORMULÁRIO DE CAMPOS -->
+      <div class="admin-card" id="form-campos" style="display:none">
+        <h2 class="admin-card-titulo">Revise e ajuste os dados</h2>
+        <p class="admin-card-subtitulo">As informações foram extraídas automaticamente. Confira tudo antes de publicar.</p>
+
+        <div class="campos-grid">
+          <div class="form-group">
+            <label class="form-label">Destino *</label>
+            <input type="text" class="form-input" id="campo-destino" placeholder="ex: Lisboa, Portugal"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Hotel *</label>
+            <input type="text" class="form-input" id="campo-hotel" placeholder="ex: Hotel Bairro Alto"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Companhia aérea *</label>
+            <input type="text" class="form-input" id="campo-cia" placeholder="ex: LATAM"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Número de noites *</label>
+            <input type="number" class="form-input" id="campo-noites" placeholder="ex: 7"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data de início * (dd/mm/aaaa)</label>
+            <input type="text" class="form-input" id="campo-inicio" placeholder="ex: 30/06/2026" maxlength="10" oninput="formatarData(this)"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Data de fim * (dd/mm/aaaa)</label>
+            <input type="text" class="form-input" id="campo-fim" placeholder="ex: 05/07/2026" maxlength="10" oninput="formatarData(this)"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preço total por pessoa (R$) *</label>
+            <input type="text" class="form-input" id="campo-preco" placeholder="ex: 6.792,00" oninput="formatarMoeda(this)"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Parcelas</label>
+            <input type="number" class="form-input" id="campo-parcelas" placeholder="ex: 12" min="1"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Valor da parcela (R$)</label>
+            <input type="text" class="form-input" id="campo-valor-parcela" placeholder="ex: 566,00" oninput="formatarMoeda(this)"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Transfer incluído?</label>
+            <select class="form-input" id="campo-transfer">
+              <option value="false">Não</option>
+              <option value="true">Sim</option>
+            </select>
+          </div>
+          <div class="form-group campo-full">
+            <label class="form-label">O que está incluído</label>
+            <div class="form-checkbox-group" id="inclusos-group">
+              <label class="form-checkbox-item"><input type="checkbox" value="Passagem aérea"/> Passagem aérea</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="Hotel"/> Hotel</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="Café da manhã"/> Café da manhã</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="Meia pensão"/> Meia pensão</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="Pensão completa"/> Pensão completa</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="Seguro viagem"/> Seguro viagem</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="Assistência 24h"/> Assistência 24h</label>
+            </div>
+          </div>
+          <div class="form-group campo-full">
+            <label class="form-label">Descrição adicional</label>
+            <textarea class="form-textarea" id="campo-descricao" placeholder="Informações extras, condições especiais..."></textarea>
+          </div>
+        </div>
+
+        <button class="btn-salvar" onclick="salvarPacote()">Publicar pacote</button>
+        <p class="form-sucesso" id="form-sucesso">✓ Pacote publicado com sucesso!</p>
+        <p class="form-erro" id="form-erro">Erro ao salvar. Tente novamente.</p>
+      </div>
+    </div>
+
+    <!-- TAB: LISTA -->
+    <div id="tab-lista" style="display:none">
+      <div class="admin-card">
+        <h2 class="admin-card-titulo">Pacotes ativos</h2>
+        <p class="admin-card-subtitulo">Todos os pacotes visíveis para os clientes. Arquive os que já não estão disponíveis.</p>
+        <div id="lista-admin-loading" style="color:var(--cinza-texto);font-size:13px;padding:20px 0">Carregando...</div>
+        <div class="pacotes-admin-lista" id="lista-admin"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONFIG SUPABASE ──
+const SUPABASE_URL = 'https://vezyeaixfudjkrdjpawb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlenllYWl4ZnVkamtyZGpwYXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NjYxMjksImV4cCI6MjA5NzA0MjEyOX0.VB06KVD6OroYzzSCiLRgFcKlVM-WIQIR2im3w6uwyEE';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlenllYWl4ZnVkamtyZGpwYXdiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MTQ2NjEyOSwiZXhwIjoyMDk3MDQyMTI5fQ.deVdB3XhPLtTb9HQZZXv_DGW8qgYCa3hJYedHI-2YF0';
+
+// CREDENCIAIS ADMIN (simplificado — sem bcrypt externo)
+const ADMIN_EMAIL = 'adriana@clubeturismo.com.br';
+const ADMIN_SENHA = 'Ct2026';
+
+// WHATSAPP
+const WHATSAPP_NUMERO = '5511976220970';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const dbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+let todosPacotes = [];
+let imagemBase64 = null;
+let logado = false;
+
+// ── NAVEGAÇÃO ──
+function mostrarPublico() {
+  document.getElementById('pagina-publica').style.display = 'block';
+  document.getElementById('pagina-login').style.display = 'none';
+  document.getElementById('pagina-admin').style.display = 'none';
+}
+function mostrarLogin() {
+  document.getElementById('pagina-publica').style.display = 'none';
+  document.getElementById('pagina-login').style.display = 'flex';
+  document.getElementById('pagina-admin').style.display = 'none';
+}
+function mostrarAdmin() {
+  document.getElementById('pagina-publica').style.display = 'none';
+  document.getElementById('pagina-login').style.display = 'none';
+  document.getElementById('pagina-admin').style.display = 'block';
+  carregarListaAdmin();
+}
+function sair() {
+  logado = false;
+  mostrarPublico();
+}
+function mostrarTab(tab, el) {
+  document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('ativo'));
+  el.classList.add('ativo');
+  document.getElementById('tab-cadastro').style.display = tab === 'cadastro' ? 'block' : 'none';
+  document.getElementById('tab-lista').style.display = tab === 'lista' ? 'block' : 'none';
+  if (tab === 'lista') carregarListaAdmin();
+}
+
+// ── LOGIN ──
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const erro = document.getElementById('login-erro');
+  const btn = document.getElementById('btn-login');
+  erro.style.display = 'none';
+  btn.textContent = 'Verificando...';
+  btn.disabled = true;
+  await new Promise(r => setTimeout(r, 600));
+  if (email === ADMIN_EMAIL && senha === ADMIN_SENHA) {
+    logado = true;
+    mostrarAdmin();
+  } else {
+    erro.style.display = 'block';
+  }
+  btn.textContent = 'Entrar';
+  btn.disabled = false;
+}
+
+// ── UPLOAD DE LÂMINA ──
+function dragOver(e) { e.preventDefault(); document.getElementById('upload-area').classList.add('drag-over'); }
+function dragLeave() { document.getElementById('upload-area').classList.remove('drag-over'); }
+function drop(e) {
+  e.preventDefault();
+  dragLeave();
+  const file = e.dataTransfer.files[0];
+  if (file) processarArquivo(file);
+}
+function selecionouArquivo(e) {
+  const file = e.target.files[0];
+  if (file) processarArquivo(file);
+}
+function processarArquivo(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    imagemBase64 = e.target.result;
+    document.getElementById('preview-img').src = imagemBase64;
+    document.getElementById('upload-preview').style.display = 'block';
+    document.getElementById('upload-placeholder').style.display = 'none';
+    document.getElementById('btn-extrair').disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── EXTRAÇÃO COM IA ──
+async function extrairDados() {
+  if (!imagemBase64) return;
+  const btn = document.getElementById('btn-extrair');
+  const status = document.getElementById('extraindo-status');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Analisando...';
+  status.style.display = 'block';
+
+  try {
+    const base64Data = imagemBase64.split(',')[1];
+    const mediaType = imagemBase64.split(';')[0].split(':')[1];
+
+    const response = await fetch(
+      'https://vezyeaixfudjkrdjpawb.supabase.co/functions/v1/extrair-lamina',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZlenllYWl4ZnVkamtyZGpwYXdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE0NjYxMjksImV4cCI6MjA5NzA0MjEyOX0.VB06KVD6OroYzzSCiLRgFcKlVM-WIQIR2im3w6uwyEE'
+        },
+        body: JSON.stringify({ base64Data, mediaType })
+      }
+    );
+
+    const json = await response.json();
+    console.log('Edge Function response:', JSON.stringify(json));
+    if (json.error) throw new Error(json.error);
+    const texto = JSON.stringify(json);
+    const jsonData = typeof texto === 'string' ? JSON.parse(texto) : json;
+    preencherFormulario(jsonData);
+    document.getElementById('form-campos').style.display = 'block';
+    document.getElementById('form-campos').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    console.error(err);
+    document.getElementById('form-campos').style.display = 'block';
+    status.textContent = 'Não foi possível extrair automaticamente. Preencha os campos manualmente.';
+  } finally {
+    btn.innerHTML = '<span>✨</span> Extrair novamente';
+    btn.disabled = false;
+    status.style.display = 'none';
+  }
+}
+
+function preencherFormulario(dados) {
+  if (dados.destino) document.getElementById('campo-destino').value = dados.destino;
+  if (dados.hotel) document.getElementById('campo-hotel').value = dados.hotel;
+  if (dados.companhia_aerea) document.getElementById('campo-cia').value = dados.companhia_aerea;
+  if (dados.numero_noites) document.getElementById('campo-noites').value = dados.numero_noites;
+  if (dados.periodo_inicio) {
+    const d = new Date(dados.periodo_inicio + 'T12:00:00');
+    document.getElementById('campo-inicio').value = d.toLocaleDateString('pt-BR');
+  }
+  if (dados.periodo_fim) {
+    const d = new Date(dados.periodo_fim + 'T12:00:00');
+    document.getElementById('campo-fim').value = d.toLocaleDateString('pt-BR');
+  }
+  if (dados.preco_por_pessoa) {
+    document.getElementById('campo-preco').value = parseFloat(dados.preco_por_pessoa).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+  }
+  if (dados.parcelas) document.getElementById('campo-parcelas').value = dados.parcelas;
+  if (dados.valor_parcela) {
+    document.getElementById('campo-valor-parcela').value = parseFloat(dados.valor_parcela).toLocaleString('pt-BR', {minimumFractionDigits: 2});
+  }
+  if (dados.transfer) document.getElementById('campo-transfer').value = dados.transfer ? 'true' : 'false';
+  if (dados.descricao) document.getElementById('campo-descricao').value = dados.descricao;
+
+  if (dados.inclusos && Array.isArray(dados.inclusos)) {
+    document.querySelectorAll('#inclusos-group input[type="checkbox"]').forEach(cb => {
+      cb.checked = dados.inclusos.some(i => i.toLowerCase().includes(cb.value.toLowerCase()) || cb.value.toLowerCase().includes(i.toLowerCase()));
+    });
+  }
+}
+
+// ── SALVAR PACOTE ──
+function parseMoeda(str) {
+  if (!str) return 0;
+  return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+}
+
+function parseDataBR(str) {
+  if (!str || str.length < 10) return null;
+  const [d, m, y] = str.split('/');
+  if (!d || !m || !y) return null;
+  return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+}
+
+function formatarMoeda(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (!v) { input.value = ''; return; }
+  v = (parseInt(v) / 100).toFixed(2);
+  input.value = parseFloat(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+}
+
+function formatarData(input) {
+  let v = input.value.replace(/\D/g, '');
+  if (v.length > 2) v = v.slice(0,2) + '/' + v.slice(2);
+  if (v.length > 5) v = v.slice(0,5) + '/' + v.slice(5,9);
+  input.value = v;
+}
+
+async function buscarImagemUnsplash(destino) {
+  try {
+    const query = encodeURIComponent(destino + ' travel landscape');
+    const resp = await fetch(`https://api.unsplash.com/search/photos?query=${query}&per_page=1&orientation=landscape&client_id=H7JrgVYBlpaLC4wsii7fHH_iRlurhNxzEt3KJpAnduY`);
+    const data = await resp.json();
+    if (data.results && data.results.length > 0) {
+      return data.results[0].urls.regular;
+    }
+  } catch(e) { console.log('Unsplash indisponível'); }
+  return null;
+}
+
+function mostrarFormularioManual() {
+  document.getElementById('form-campos').style.display = 'block';
+  document.getElementById('form-campos').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function salvarPacote() {
+  const sucesso = document.getElementById('form-sucesso');
+  const erro = document.getElementById('form-erro');
+  sucesso.style.display = 'none';
+  erro.style.display = 'none';
+
+  const inclusos = Array.from(document.querySelectorAll('#inclusos-group input:checked')).map(cb => cb.value);
+  const destino = document.getElementById('campo-destino').value.trim();
+  const precoTotal = parseMoeda(document.getElementById('campo-preco').value);
+  const parcelas = parseInt(document.getElementById('campo-parcelas').value) || 1;
+  const valorParcela = parseMoeda(document.getElementById('campo-valor-parcela').value);
+
+  const pacote = {
+    destino,
+    hotel: document.getElementById('campo-hotel').value.trim(),
+    companhia_aerea: document.getElementById('campo-cia').value.trim(),
+    numero_noites: parseInt(document.getElementById('campo-noites').value) || 0,
+    periodo_inicio: parseDataBR(document.getElementById('campo-inicio').value),
+    periodo_fim: parseDataBR(document.getElementById('campo-fim').value),
+    preco_por_pessoa: precoTotal,
+    preco_total: precoTotal,
+    parcelas,
+    valor_parcela: valorParcela,
+    transfer: document.getElementById('campo-transfer').value === 'true',
+    inclusos,
+    descricao: document.getElementById('campo-descricao').value.trim(),
+    imagem_url: null,
+    ativo: true
+  };
+
+  if (!pacote.destino || !pacote.hotel || !pacote.preco_por_pessoa) {
+    erro.textContent = 'Preencha ao menos destino, hotel e preço.';
+    erro.style.display = 'block';
+    return;
+  }
+
+  const { data: inserted, error } = await dbAdmin.from('pacotes').insert([pacote]).select();
+  if (error) {
+    console.error(error);
+    erro.textContent = 'Erro ao salvar: ' + error.message;
+    erro.style.display = 'block';
+  } else {
+    // Buscar imagem no Unsplash e atualizar
+    if (inserted && inserted[0]) {
+      const imgUrl = await buscarImagemUnsplash(destino);
+      if (imgUrl) {
+        await dbAdmin.from('pacotes').update({ imagem_url: imgUrl }).eq('id', inserted[0].id);
+      }
+    }
+    sucesso.style.display = 'block';
+    setTimeout(() => {
+      limparFormulario();
+      carregarPacotesPublicos();
+    }, 1500);
+  }
+}
+
+function limparFormulario() {
+  ['campo-destino','campo-hotel','campo-cia','campo-noites','campo-inicio','campo-fim','campo-preco','campo-parcelas','campo-valor-parcela','campo-descricao'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('campo-transfer').value = 'false';
+  document.querySelectorAll('#inclusos-group input').forEach(cb => cb.checked = false);
+  document.getElementById('form-campos').style.display = 'none';
+  document.getElementById('upload-preview').style.display = 'none';
+  document.getElementById('upload-placeholder').style.display = 'block';
+  document.getElementById('btn-extrair').disabled = true;
+  imagemBase64 = null;
+  document.getElementById('form-sucesso').style.display = 'none';
+}
+
+// ── CARREGAR PACOTES PÚBLICOS ──
+async function carregarPacotesPublicos() {
+  const { data, error } = await db.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
+  document.getElementById('loading-publico').style.display = 'none';
+  if (error || !data) return;
+  todosPacotes = data;
+  popularFiltroDestinos(data);
+  renderizarPacotes(data);
+}
+
+function popularFiltroDestinos(pacotes) {
+  const destinos = [...new Set(pacotes.map(p => p.destino))].sort();
+  const select = document.getElementById('filtro-destino');
+  select.innerHTML = '<option value="">Todos os destinos</option>';
+  destinos.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d; opt.textContent = d;
+    select.appendChild(opt);
+  });
+}
+
+function aplicarFiltros() {
+  let filtrados = [...todosPacotes];
+  const dest = document.getElementById('filtro-destino').value;
+  const preco = document.getElementById('filtro-preco').value;
+  const data = document.getElementById('filtro-data').value;
+
+  if (dest) filtrados = filtrados.filter(p => p.destino === dest);
+  if (preco) {
+    const [min, max] = preco.split('-').map(Number);
+    filtrados = filtrados.filter(p => p.preco_por_pessoa >= min && p.preco_por_pessoa <= max);
+  }
+  if (data) {
+    const limite = new Date();
+    limite.setDate(limite.getDate() + parseInt(data));
+    filtrados = filtrados.filter(p => new Date(p.periodo_inicio) <= limite);
+  }
+  renderizarPacotes(filtrados);
+}
+
+function limparFiltros() {
+  document.getElementById('filtro-destino').value = '';
+  document.getElementById('filtro-preco').value = '';
+  document.getElementById('filtro-data').value = '';
+  renderizarPacotes(todosPacotes);
+}
+
+function renderizarPacotes(pacotes) {
+  const container = document.getElementById('pacotes-container');
+  if (!pacotes.length) {
+    container.innerHTML = '<div class="empty-state"><p>Nenhum pacote encontrado para os filtros selecionados.</p></div>';
+    return;
+  }
+
+  const porDestino = {};
+  pacotes.forEach(p => {
+    if (!porDestino[p.destino]) porDestino[p.destino] = [];
+    porDestino[p.destino].push(p);
+  });
+
+  container.innerHTML = Object.entries(porDestino).map(([destino, lista]) => `
+    <section class="destino-section">
+      <div class="destino-header">
+        <h2 class="destino-nome">${destino}</h2>
+        <span class="destino-count">${lista.length} ${lista.length === 1 ? 'opção' : 'opções'}</span>
+      </div>
+      <div class="cards-grid">
+        ${lista.map(p => cardHTML(p)).join('')}
+      </div>
+    </section>
+  `).join('');
+}
+
+function cardHTML(p) {
+  const inicio = p.periodo_inicio ? new Date(p.periodo_inicio + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
+  const fim = p.periodo_fim ? new Date(p.periodo_fim + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+  const periodo = inicio && fim ? `${inicio} → ${fim}` : 'Consulte datas';
+  const preco = p.preco_por_pessoa ? `R$ ${p.preco_por_pessoa.toLocaleString('pt-BR', { minimumFractionDigits: 0 })}` : 'Consultar';
+  const inclusos = (p.inclusos || []).map(i => `<span class="tag-incluso">${i}</span>`).join('');
+  const transferTag = p.transfer ? `<span class="tag-incluso tag-transfer">Transfer</span>` : '';
+  const msg = encodeURIComponent(`Olá, Adriana! Tenho interesse no pacote para *${p.destino}* (${periodo}) — ${preco}/pessoa. Poderia me passar mais detalhes?`);
+
+  return `
+    <div class="card">
+      <div class="card-imagem">
+        ${p.imagem_url ? `<img src="${p.imagem_url}" alt="${p.destino}"/>` : p.destino}
+      </div>
+      <div class="card-body">
+        <h3 class="card-destino">${p.destino}</h3>
+        <p class="card-hotel">${p.hotel}</p>
+        <div class="card-infos">
+          <div class="card-info-item">
+            <span class="card-info-label">Período</span>
+            <span class="card-info-valor">${periodo}</span>
+          </div>
+          <div class="card-info-item">
+            <span class="card-info-label">Duração</span>
+            <span class="card-info-valor">${p.numero_noites} noites</span>
+          </div>
+          <div class="card-info-item">
+            <span class="card-info-label">Voo</span>
+            <span class="card-info-valor">${p.companhia_aerea || 'A confirmar'}</span>
+          </div>
+        </div>
+        <div class="card-inclusos">${inclusos}${transferTag}</div>
+        <div class="card-footer">
+          <div class="card-preco">
+            <span class="card-preco-label">A partir de</span>
+            <span class="card-preco-valor">${preco}</span>
+            <span class="card-preco-pp">por pessoa</span>
+            ${p.parcelas > 1 ? `<span class="card-preco-parcela">${p.parcelas}x de R$ ${(p.valor_parcela||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>` : ''}
+          </div>
+          <a class="btn-whatsapp" href="https://wa.me/${WHATSAPP_NUMERO}?text=${msg}" target="_blank">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Quero saber mais
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── LISTA ADMIN ──
+async function carregarListaAdmin() {
+  const { data, error } = await dbAdmin.from('pacotes').select('*').order('created_at', { ascending: false });
+  document.getElementById('lista-admin-loading').style.display = 'none';
+  const lista = document.getElementById('lista-admin');
+  if (error || !data || !data.length) {
+    lista.innerHTML = '<p style="color:var(--cinza-texto);font-size:13px">Nenhum pacote cadastrado ainda.</p>';
+    return;
+  }
+  lista.innerHTML = data.map(p => `
+    <div class="pacote-admin-item">
+      <div class="pacote-admin-info">
+        <div class="pacote-admin-destino">
+          <span class="status-ativo" style="background:${p.ativo ? '#16a34a' : '#9ca3af'}"></span>
+          ${p.destino}
+        </div>
+        <div class="pacote-admin-detalhe">${p.hotel} · ${p.numero_noites} noites · ${p.companhia_aerea || ''}</div>
+      </div>
+      <span class="pacote-admin-preco">R$ ${(p.preco_por_pessoa || 0).toLocaleString('pt-BR', { minimumFractionDigits: 0 })}</span>
+      <div class="pacote-admin-acoes">
+        <button class="btn-arquivar" onclick="arquivarPacote('${p.id}', ${p.ativo})">${p.ativo ? 'Arquivar' : 'Reativar'}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function arquivarPacote(id, ativoAtual) {
+  if (!confirm(ativoAtual ? 'Arquivar este pacote?' : 'Reativar este pacote?')) return;
+  await dbAdmin.from('pacotes').update({ ativo: !ativoAtual }).eq('id', id);
+  carregarListaAdmin();
+  carregarPacotesPublicos();
+}
+
+// ── INIT ──
+carregarPacotesPublicos();
+</script>
+</body>
+</html>
+
