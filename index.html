@@ -27,13 +27,13 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 /* HEADER */
 .header {
   background:var(--branco);
-  padding: 10px 40px;
+  padding: 8px 40px;
   display:flex; align-items:center; justify-content:center;
   position:sticky; top:0; z-index:100;
   border-bottom:1px solid var(--cinza-borda);
   box-shadow:0 1px 4px rgba(46,48,146,0.06);
 }
-.header img { width:140px; height:auto; object-fit:contain; display:block; }
+.header img { width:200px; height:auto; object-fit:contain; display:block; }
 .header-admin-btn {
   position:absolute; right:40px;
   color:var(--azul); font-size:12px; letter-spacing:1.5px; text-transform:uppercase;
@@ -645,7 +645,7 @@ function formatarDataExibicao(str) {
   if (!str) return 'Consulte datas';
   try {
     const d = new Date(str + 'T12:00:00');
-    return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'short', year:'numeric'});
+    return d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'});
   } catch { return str; }
 }
 
@@ -949,7 +949,7 @@ async function abrirModal(id) {
     : (p.imagem_url ? [p.imagem_url] : []);
   const inicio = p.periodo_inicio ? formatarDataExibicao(p.periodo_inicio) : 'Consulte';
   const fim = p.periodo_fim ? formatarDataExibicao(p.periodo_fim) : '';
-  const periodo = inicio && fim ? `${inicio} → ${fim}` : inicio;
+  const periodo = inicio && fim ? `${inicio} — ${fim}` : inicio;
   const preco = p.preco_por_pessoa ? `R$ ${p.preco_por_pessoa.toLocaleString('pt-BR',{minimumFractionDigits:0})}` : 'Consultar';
   const msg = encodeURIComponent(`Olá, Adriana! Tenho interesse no pacote para *${p.destino}*. Poderia me passar mais detalhes?`);
   const inclusos = (p.inclusos||[]).map(i => `<span class="tag-incluso">${i}</span>`).join('');
