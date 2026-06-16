@@ -874,7 +874,7 @@ async function editarPacote(id) {
 
 // ── CARREGAR PACOTES PÚBLICOS ──
 async function carregarPacotesPublicos() {
-  const { data, error } = await db.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
+  const { data, error } = await dbAdmin.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
   document.getElementById('loading-publico').style.display = 'none';
   if (error || !data) { console.error('Erro ao carregar pacotes:', error); return; }
 
