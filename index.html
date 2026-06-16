@@ -501,7 +501,8 @@ const ADMIN_EMAIL = 'adriana@clubeturismo.com.br';
 const ADMIN_SENHA = 'Ct2026';
 
 const { createClient } = supabase;
-const dbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
+const db = createClient(SUPABASE_URL, SUPABASE_ANON);
+const dbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE);
 
 let todosPacotes = [];
 let imagemBase64 = null;
@@ -873,23 +874,12 @@ async function editarPacote(id) {
 
 // ── CARREGAR PACOTES PÚBLICOS ──
 async function carregarPacotesPublicos() {
-  const { data, error } = await dbAdmin.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
+  const { data, error } = await db.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
   document.getElementById('loading-publico').style.display = 'none';
-  if (error || !data) { console.error('Erro ao carregar pacotes:', error); return; }
-
-  // Buscar fotos usando service key para evitar erro 500 com anon key
-  let fotosMap = {};
-  const { data: fotos } = await dbAdmin.from('pacote_fotos').select('pacote_id, url, ordem').order('ordem');
-  if (fotos) {
-    fotos.forEach(f => {
-      if (!fotosMap[f.pacote_id]) fotosMap[f.pacote_id] = [];
-      fotosMap[f.pacote_id].push(f.url);
-    });
-  }
-
+  if (error || !data) return;
   todosPacotes = data.map(p => ({
     ...p,
-    fotos: fotosMap[p.id] || (p.imagem_url ? [p.imagem_url] : [])
+    fotos: p.imagem_url ? [p.imagem_url] : []
   }));
   popularFiltros(todosPacotes);
   renderizarPacotes(todosPacotes);
@@ -990,7 +980,7 @@ async function abrirModal(id) {
   const p = todosPacotes.find(x => x.id === id);
   if (!p) return;
   // Buscar fotos diretamente do banco para garantir atualização
-  const { data: fotosDb } = await dbAdmin.from('pacote_fotos').select('url, ordem').eq('pacote_id', id).order('ordem');
+  const { data: fotosDb } = await db.from('pacote_fotos').select('url, ordem').eq('pacote_id', id).order('ordem');
   const fotos = fotosDb && fotosDb.length > 0
     ? fotosDb.map(f => f.url)
     : (p.imagem_url ? [p.imagem_url] : []);
@@ -1051,12 +1041,12 @@ function fecharModal(e) {
 async function carregarListaAdmin(ativo) {
   const listaId = ativo ? 'lista-ativos' : 'lista-arquivados';
   const loadingId = ativo ? 'lista-ativos-loading' : 'lista-arquivados-loading';
-  const { data } = await dbAdmin.from('pacotes').select('*').eq('ativo', ativo).order('created_at', { ascending: false });
+  const { data } = await dbAdmin.from('pacotes').select('*, pacote_fotos(url, ordem)').eq('ativo', ativo).order('created_at', { ascending: false });
   document.getElementById(loadingId).style.display = 'none';
   const lista = document.getElementById(listaId);
   if (!data || !data.length) { lista.innerHTML = '<p style="color:var(--cinza-texto);font-size:13px">Nenhum pacote aqui ainda.</p>'; return; }
   lista.innerHTML = data.map(p => {
-    const thumb = p.imagem_url || '';
+    const thumb = p.imagem_url || (p.pacote_fotos && p.pacote_fotos[0] ? p.pacote_fotos[0].url : '');
     return `
       <div class="pacote-admin-item">
         ${thumb ? `<img class="pacote-admin-thumb" src="${thumb}" alt="${p.destino}"/>` : '<div class="pacote-admin-thumb"></div>'}
