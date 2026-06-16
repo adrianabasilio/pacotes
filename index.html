@@ -874,12 +874,26 @@ async function editarPacote(id) {
 
 // ── CARREGAR PACOTES PÚBLICOS ──
 async function carregarPacotesPublicos() {
-  const { data, error } = await db.from('pacotes').select('*, pacote_fotos(url, ordem)').eq('ativo', true).order('created_at', { ascending: false });
+  const { data, error } = await db.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
   document.getElementById('loading-publico').style.display = 'none';
-  if (error || !data) return;
+  if (error || !data) { console.error('Erro ao carregar pacotes:', error); return; }
+
+  // Buscar fotos separadamente para evitar erro 500 no join via anon key
+  const ids = data.map(p => p.id);
+  let fotosMap = {};
+  if (ids.length > 0) {
+    const { data: fotos } = await db.from('pacote_fotos').select('pacote_id, url, ordem').in('pacote_id', ids).order('ordem');
+    if (fotos) {
+      fotos.forEach(f => {
+        if (!fotosMap[f.pacote_id]) fotosMap[f.pacote_id] = [];
+        fotosMap[f.pacote_id].push(f.url);
+      });
+    }
+  }
+
   todosPacotes = data.map(p => ({
     ...p,
-    fotos: (p.pacote_fotos || []).sort((a,b) => a.ordem - b.ordem).map(f => f.url)
+    fotos: fotosMap[p.id] || (p.imagem_url ? [p.imagem_url] : [])
   }));
   popularFiltros(todosPacotes);
   renderizarPacotes(todosPacotes);
