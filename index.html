@@ -501,8 +501,7 @@ const ADMIN_EMAIL = 'adriana@clubeturismo.com.br';
 const ADMIN_SENHA = 'Ct2026';
 
 const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON);
-const dbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE);
+const dbAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE, { auth: { persistSession: false, autoRefreshToken: false } });
 
 let todosPacotes = [];
 let imagemBase64 = null;
