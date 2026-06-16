@@ -1064,13 +1064,13 @@ async function carregarListaAdmin(ativo) {
   const listaId = ativo ? 'lista-ativos' : 'lista-arquivados';
   const loadingId = ativo ? 'lista-ativos-loading' : 'lista-arquivados-loading';
   try {
-    const { data, error } = await dbAdmin.from('pacotes').select('*, pacote_fotos(url, ordem)').eq('ativo', ativo).order('created_at', { ascending: false });
+    const { data, error } = await dbAdmin.from('pacotes').select('*').eq('ativo', ativo).order('created_at', { ascending: false });
     document.getElementById(loadingId).style.display = 'none';
     const lista = document.getElementById(listaId);
     if (error) { lista.innerHTML = '<p style="color:#ef4444;font-size:13px">Erro ao carregar: ' + error.message + '</p>'; return; }
     if (!data || !data.length) { lista.innerHTML = '<p style="color:var(--cinza-texto);font-size:13px">Nenhum pacote aqui ainda.</p>'; return; }
       lista.innerHTML = data.map(p => {
-    const thumb = p.imagem_url || (p.pacote_fotos && p.pacote_fotos[0] ? p.pacote_fotos[0].url : '');
+    const thumb = p.imagem_url || '';
     return `
       <div class="pacote-admin-item">
         ${thumb ? `<img class="pacote-admin-thumb" src="${thumb}" alt="${p.destino}"/>` : '<div class="pacote-admin-thumb"></div>'}
