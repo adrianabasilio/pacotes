@@ -878,17 +878,14 @@ async function carregarPacotesPublicos() {
   document.getElementById('loading-publico').style.display = 'none';
   if (error || !data) { console.error('Erro ao carregar pacotes:', error); return; }
 
-  // Buscar fotos separadamente para evitar erro 500 no join via anon key
-  const ids = data.map(p => p.id);
+  // Buscar todas as fotos de uma vez sem filtrar por ID na URL
   let fotosMap = {};
-  if (ids.length > 0) {
-    const { data: fotos } = await db.from('pacote_fotos').select('pacote_id, url, ordem').in('pacote_id', ids).order('ordem');
-    if (fotos) {
-      fotos.forEach(f => {
-        if (!fotosMap[f.pacote_id]) fotosMap[f.pacote_id] = [];
-        fotosMap[f.pacote_id].push(f.url);
-      });
-    }
+  const { data: fotos } = await db.from('pacote_fotos').select('pacote_id, url, ordem').order('ordem');
+  if (fotos) {
+    fotos.forEach(f => {
+      if (!fotosMap[f.pacote_id]) fotosMap[f.pacote_id] = [];
+      fotosMap[f.pacote_id].push(f.url);
+    });
   }
 
   todosPacotes = data.map(p => ({
