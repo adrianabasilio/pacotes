@@ -145,6 +145,15 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 /* EMPTY / LOADING */
 .empty-state { text-align:center; padding:80px 20px; color:var(--cinza-texto); }
 .loading { text-align:center; padding:80px 20px; color:var(--cinza-texto); font-size:14px; }
+.loading-spinner {
+  display:inline-block; width:32px; height:32px;
+  border:3px solid var(--cinza-borda);
+  border-top-color:var(--azul);
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin-bottom:12px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
 
 /* LOGIN */
 #pagina-login { min-height:100vh; background:var(--azul); display:none; align-items:center; justify-content:center; }
@@ -304,7 +313,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
     <button class="filtro-limpar" onclick="limparFiltros()">Limpar</button>
   </div>
   <main class="main" id="conteudo-principal">
-    <div class="loading" id="loading-publico">Carregando pacotes...</div>
+    <div class="loading" id="loading-publico"><div class="loading-spinner"></div><br/>Carregando pacotes...</div>
     <div id="pacotes-container"></div>
   </main>
   <footer class="footer">© 2025 Clube Turismo — Adriana Basilio Travel Designer · @adrianaviagem</footer>
@@ -873,16 +882,29 @@ async function editarPacote(id) {
 }
 
 // ── CARREGAR PACOTES PÚBLICOS ──
+async function aquecer() {
+  // Requisição leve para acordar o Supabase antes da consulta principal
+  try { await db.from('pacotes').select('id').limit(1); } catch(e) {}
+}
+
 async function carregarPacotesPublicos() {
-  const { data, error } = await db.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
-  document.getElementById('loading-publico').style.display = 'none';
-  if (error || !data) return;
-  todosPacotes = data.map(p => ({
-    ...p,
-    fotos: p.imagem_url ? [p.imagem_url] : []
-  }));
-  popularFiltros(todosPacotes);
-  renderizarPacotes(todosPacotes);
+  try {
+    const { data, error } = await db.from('pacotes').select('*').eq('ativo', true).order('created_at', { ascending: false });
+    document.getElementById('loading-publico').style.display = 'none';
+    if (error || !data) {
+      document.getElementById('pacotes-container').innerHTML = '<div class="empty-state"><p>Não foi possível carregar os pacotes. Tente recarregar a página.</p></div>';
+      return;
+    }
+    todosPacotes = data.map(p => ({
+      ...p,
+      fotos: p.imagem_url ? [p.imagem_url] : []
+    }));
+    popularFiltros(todosPacotes);
+    renderizarPacotes(todosPacotes);
+  } catch(e) {
+    document.getElementById('loading-publico').style.display = 'none';
+    document.getElementById('pacotes-container').innerHTML = '<div class="empty-state"><p>Não foi possível carregar os pacotes. Tente recarregar a página.</p></div>';
+  }
 }
 
 function popularFiltros(pacotes) {
@@ -1041,11 +1063,13 @@ function fecharModal(e) {
 async function carregarListaAdmin(ativo) {
   const listaId = ativo ? 'lista-ativos' : 'lista-arquivados';
   const loadingId = ativo ? 'lista-ativos-loading' : 'lista-arquivados-loading';
-  const { data } = await dbAdmin.from('pacotes').select('*, pacote_fotos(url, ordem)').eq('ativo', ativo).order('created_at', { ascending: false });
-  document.getElementById(loadingId).style.display = 'none';
-  const lista = document.getElementById(listaId);
-  if (!data || !data.length) { lista.innerHTML = '<p style="color:var(--cinza-texto);font-size:13px">Nenhum pacote aqui ainda.</p>'; return; }
-  lista.innerHTML = data.map(p => {
+  try {
+    const { data, error } = await dbAdmin.from('pacotes').select('*, pacote_fotos(url, ordem)').eq('ativo', ativo).order('created_at', { ascending: false });
+    document.getElementById(loadingId).style.display = 'none';
+    const lista = document.getElementById(listaId);
+    if (error) { lista.innerHTML = '<p style="color:#ef4444;font-size:13px">Erro ao carregar: ' + error.message + '</p>'; return; }
+    if (!data || !data.length) { lista.innerHTML = '<p style="color:var(--cinza-texto);font-size:13px">Nenhum pacote aqui ainda.</p>'; return; }
+      lista.innerHTML = data.map(p => {
     const thumb = p.imagem_url || (p.pacote_fotos && p.pacote_fotos[0] ? p.pacote_fotos[0].url : '');
     return `
       <div class="pacote-admin-item">
@@ -1062,6 +1086,10 @@ async function carregarListaAdmin(ativo) {
       </div>
     `;
   }).join('');
+  } catch(e) {
+    document.getElementById(loadingId).style.display = 'none';
+    document.getElementById(listaId).innerHTML = '<p style="color:#ef4444;font-size:13px">Erro de conexão. Tente novamente.</p>';
+  }
 }
 
 async function arquivarPacote(id, ativoAtual) {
@@ -1073,7 +1101,7 @@ async function arquivarPacote(id, ativoAtual) {
 
 // ── INIT ──
 mostrarPublico();
-carregarPacotesPublicos();
+aquecer().then(() => carregarPacotesPublicos());
 </script>
 </body>
 </html>
