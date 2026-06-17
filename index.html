@@ -260,6 +260,13 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 .btn-ordem:hover { border-color:var(--azul); color:var(--azul); }
 .btn-ordem:disabled { opacity:0.3; cursor:default; }
 .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
+.admin-categoria { font-size:12px; font-weight:600; color:var(--azul); letter-spacing:1.5px; text-transform:uppercase; padding:16px 0 8px; border-bottom:1px solid var(--cinza-borda); margin-bottom:10px; margin-top:20px; }
+.admin-categoria:first-child { margin-top:0; }
+.pacote-admin-item { background:var(--branco); border:1px solid var(--cinza-borda); border-radius:10px; padding:16px 20px; display:flex; align-items:center; gap:16px; cursor:grab; transition:box-shadow 0.2s, opacity 0.2s; user-select:none; }
+.pacote-admin-item:active { cursor:grabbing; }
+.pacote-admin-item.dragging { opacity:0.4; box-shadow:0 8px 24px rgba(46,48,146,0.15); }
+.pacote-admin-item.drag-over { border-color:var(--azul); border-style:dashed; }
+.drag-handle { color:var(--cinza-texto); opacity:0.4; font-size:18px; cursor:grab; padding:0 4px; flex-shrink:0; }
 
 /* FOOTER */
 .footer { text-align:center; padding:28px; font-size:12px; color:var(--cinza-texto); border-top:1px solid var(--cinza-borda); }
@@ -1175,9 +1182,45 @@ async function carregarListaAdmin(ativo) {
       </div>
     `;
   }).join('');
+    if (ativo) iniciarDragDrop(lista);
   } catch(e) {
     document.getElementById(loadingId).style.display = 'none';
     document.getElementById(listaId).innerHTML = '<p style="color:#ef4444;font-size:13px">Erro de conexão. Tente novamente.</p>';
+  }
+}
+
+function iniciarDragDrop(container) {
+  let dragged = null;
+  container.querySelectorAll('.pacote-admin-item[draggable="true"]').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      dragged = item;
+      setTimeout(() => item.classList.add('dragging'), 0);
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      container.querySelectorAll('.pacote-admin-item').forEach(i => i.classList.remove('drag-over'));
+      salvarOrdemDrag(container);
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (item !== dragged) {
+        container.querySelectorAll('.pacote-admin-item').forEach(i => i.classList.remove('drag-over'));
+        item.classList.add('drag-over');
+        const rect = item.getBoundingClientRect();
+        if (e.clientY < rect.top + rect.height / 2) {
+          container.insertBefore(dragged, item);
+        } else {
+          container.insertBefore(dragged, item.nextSibling);
+        }
+      }
+    });
+  });
+}
+
+async function salvarOrdemDrag(container) {
+  const items = container.querySelectorAll('.pacote-admin-item');
+  for (const [idx, item] of Array.from(items).entries()) {
+    await dbAdmin.from('pacotes').update({ ordem: idx }).eq('id', item.dataset.id);
   }
 }
 
