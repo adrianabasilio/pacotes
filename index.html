@@ -233,7 +233,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 .unsplash-foto-check { position:absolute; top:6px; right:6px; background:var(--azul); color:white; border-radius:50%; width:22px; height:22px; display:none; align-items:center; justify-content:center; font-size:12px; }
 .unsplash-foto.selecionada .unsplash-foto-check { display:flex; }
 .fotos-selecionadas { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-.foto-selecionada-item { position:relative; }
+.foto-selecionada-item { position:relative; transition:opacity 0.2s; }
 .foto-selecionada-item img { width:80px; height:60px; object-fit:cover; border-radius:6px; border:1px solid var(--cinza-borda); }
 .foto-remover { position:absolute; top:-6px; right:-6px; background:#ef4444; color:white; border:none; border-radius:50%; width:18px; height:18px; cursor:pointer; font-size:11px; display:flex; align-items:center; justify-content:center; }
 .separador-ou { text-align:center; color:var(--cinza-texto); font-size:12px; margin:12px 0; }
@@ -804,11 +804,42 @@ function removerFotoSelecionada(url) {
 function renderizarFotosSelecionadas() {
   const container = document.getElementById('fotos-selecionadas');
   container.innerHTML = fotosParaSalvar.map((f,i) => `
-    <div class="foto-selecionada-item">
+    <div class="foto-selecionada-item" draggable="true" data-index="${i}" style="cursor:grab;">
       <img src="${f.url}" alt="foto ${i+1}"/>
       <button class="foto-remover" onclick="removerFotoSelecionada('${f.url}')">×</button>
     </div>
   `).join('');
+  iniciarDragDropFotos(container);
+}
+
+function iniciarDragDropFotos(container) {
+  let draggedFoto = null;
+  container.querySelectorAll('.foto-selecionada-item').forEach(item => {
+    item.addEventListener('dragstart', e => {
+      draggedFoto = item;
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(() => item.style.opacity = '0.4', 0);
+    });
+    item.addEventListener('dragend', () => {
+      item.style.opacity = '1';
+      // Reconstruir array na nova ordem
+      const novosIndices = Array.from(container.querySelectorAll('.foto-selecionada-item'))
+        .map(el => parseInt(el.dataset.index));
+      fotosParaSalvar = novosIndices.map(i => fotosParaSalvar[i]);
+      renderizarFotosSelecionadas();
+    });
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (!draggedFoto || item === draggedFoto) return;
+      const rect = item.getBoundingClientRect();
+      if (e.clientX < rect.left + rect.width / 2) {
+        container.insertBefore(draggedFoto, item);
+      } else {
+        container.insertBefore(draggedFoto, item.nextElementSibling);
+      }
+    });
+    item.addEventListener('drop', e => e.preventDefault());
+  });
 }
 
 async function uploadFotos(e) {
@@ -1191,37 +1222,64 @@ async function carregarListaAdmin(ativo) {
 
 function iniciarDragDrop(container) {
   let dragged = null;
-  container.querySelectorAll('.pacote-admin-item[draggable="true"]').forEach(item => {
+  let savedOrdem = null;
+
+  function getItems() {
+    return Array.from(container.querySelectorAll('.pacote-admin-item'));
+  }
+
+  function bindItem(item) {
+    item.setAttribute('draggable', 'true');
+
     item.addEventListener('dragstart', e => {
       dragged = item;
+      savedOrdem = getItems().map(i => i.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
       setTimeout(() => item.classList.add('dragging'), 0);
     });
+
     item.addEventListener('dragend', () => {
       item.classList.remove('dragging');
-      container.querySelectorAll('.pacote-admin-item').forEach(i => i.classList.remove('drag-over'));
+      getItems().forEach(i => i.classList.remove('drag-over'));
+      dragged = null;
       salvarOrdemDrag(container);
     });
+
     item.addEventListener('dragover', e => {
       e.preventDefault();
-      if (item !== dragged) {
-        container.querySelectorAll('.pacote-admin-item').forEach(i => i.classList.remove('drag-over'));
-        item.classList.add('drag-over');
-        const rect = item.getBoundingClientRect();
-        if (e.clientY < rect.top + rect.height / 2) {
-          container.insertBefore(dragged, item);
-        } else {
-          container.insertBefore(dragged, item.nextSibling);
-        }
+      e.dataTransfer.dropEffect = 'move';
+      if (!dragged || item === dragged) return;
+      getItems().forEach(i => i.classList.remove('drag-over'));
+      item.classList.add('drag-over');
+      const rect = item.getBoundingClientRect();
+      const meio = rect.top + rect.height / 2;
+      if (e.clientY < meio) {
+        item.parentNode.insertBefore(dragged, item);
+      } else {
+        item.parentNode.insertBefore(dragged, item.nextElementSibling);
       }
     });
-  });
+
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+    });
+  }
+
+  getItems().forEach(bindItem);
 }
 
 async function salvarOrdemDrag(container) {
-  const items = container.querySelectorAll('.pacote-admin-item');
-  for (const [idx, item] of Array.from(items).entries()) {
-    await dbAdmin.from('pacotes').update({ ordem: idx }).eq('id', item.dataset.id);
+  const items = Array.from(container.querySelectorAll('.pacote-admin-item'));
+  const updates = items.map((item, idx) => ({ id: item.dataset.id, ordem: idx }));
+  for (const u of updates) {
+    await dbAdmin.from('pacotes').update({ ordem: u.ordem }).eq('id', u.id);
   }
+  // Feedback visual
+  const feedback = document.createElement('p');
+  feedback.textContent = '✓ Ordem salva';
+  feedback.style.cssText = 'color:#16a34a;font-size:12px;text-align:center;margin-top:8px;';
+  container.appendChild(feedback);
+  setTimeout(() => feedback.remove(), 2000);
 }
 
 async function moverPacote(id, direcao, ativo) {
