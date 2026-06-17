@@ -27,13 +27,13 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 /* HEADER */
 .header {
   background:var(--branco);
-  padding: 6px 40px;
+  padding: 10px 5%;
   display:flex; align-items:center; justify-content:center;
   position:sticky; top:0; z-index:100;
   border-bottom:1px solid var(--cinza-borda);
   box-shadow:0 1px 4px rgba(46,48,146,0.06);
 }
-.header img { width:160px; height:auto; object-fit:contain; display:block; }
+.header img { width:220px; height:auto; object-fit:contain; display:block; }
 .header-admin-btn {
   position:absolute; right:24px; top:6px;
   color:var(--azul); font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
@@ -45,7 +45,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 /* HERO */
 .hero {
   background:linear-gradient(135deg, var(--azul) 0%, #1a1d6e 100%);
-  padding:60px 80px 50px; text-align:center; position:relative; overflow:hidden;
+  padding:60px 10% 50px; text-align:center; position:relative; overflow:hidden;
 }
 .hero::before { content:''; position:absolute; top:-60px; right:-60px; width:300px; height:300px; background:var(--ceu); opacity:0.06; border-radius:50%; }
 .hero-eyebrow { color:var(--ceu); font-size:11px; letter-spacing:4px; text-transform:uppercase; font-weight:300; margin-bottom:16px; opacity:0.8; }
@@ -56,7 +56,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 /* FILTROS */
 .filtros-container {
   background:var(--branco); border-bottom:1px solid var(--cinza-borda);
-  padding:16px 40px; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
+  padding:16px 5%; display:flex; gap:12px; align-items:center; flex-wrap:wrap;
   position:sticky; top:62px; z-index:90;
 }
 .filtros-label { font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--cinza-texto); font-weight:500; }
@@ -70,7 +70,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 .filtro-limpar:hover { opacity:1; }
 
 /* MAIN */
-.main { max-width:1440px; margin:0 auto; padding:40px 60px 80px; }
+.main { max-width:1280px; margin:0 auto; padding:40px 40px 80px; }
 
 /* SEÇÃO DESTINO */
 .destino-section { margin-bottom:56px; }
@@ -285,15 +285,15 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
   </header>
   <section class="hero">
     <p class="hero-eyebrow">Oportunidades selecionadas por mim, para você</p>
-    <h1>Viagens com <strong>curadoria real</strong>.</h1>
-    <p>Cada pacote aqui foi escolhido com critério: hospedagem, voos e experiências que passaram pelo meu olhar antes de chegar até você.</p>
+    <h1 style="font-size:48px;">Viagens com <strong>curadoria real</strong>.</h1>
+    <p style="max-width:700px;margin-left:auto;margin-right:auto;">Cada pacote aqui foi escolhido com critério: hospedagem, voos e experiências que passaram pelo meu olhar antes de chegar até você.</p>
   </section>
-  <section style="background:var(--cinza-claro);padding:48px 80px;text-align:center;border-bottom:1px solid var(--cinza-borda);">
+  <section style="background:var(--cinza-claro);padding:48px 40px;text-align:center;border-bottom:1px solid var(--cinza-borda);">
     <p style="color:var(--azul);font-size:11px;letter-spacing:4px;text-transform:uppercase;font-weight:300;margin-bottom:14px;opacity:0.7;">Além dos pacotes</p>
-    <h2 style="color:var(--azul);font-size:26px;font-weight:300;line-height:1.4;margin-bottom:14px;max-width:600px;margin-left:auto;margin-right:auto;letter-spacing:-0.3px;">
+    <h2 style="color:var(--azul);font-size:30px;font-weight:300;line-height:1.4;margin-bottom:14px;max-width:800px;margin-left:auto;margin-right:auto;letter-spacing:-0.3px;">
       Você tem um destino em mente.<br/><strong style="font-weight:600;">Eu construo a viagem ao redor dele.</strong>
     </h2>
-    <p style="color:var(--cinza-texto);font-size:14px;font-weight:300;max-width:500px;margin:0 auto 28px;line-height:1.8;">
+    <p style="color:var(--cinza-texto);font-size:14px;font-weight:300;max-width:700px;margin:0 auto 28px;line-height:1.8;">
       Os pacotes desta página reúnem seleções com curadoria e datas definidas. Se o que você busca é uma viagem desenhada para você, com a experiência e o nível de personalização que fazem sentido para a sua forma de viajar, é exatamente esse o meu trabalho.<br/><br/>
       Me conte sobre a viagem que você tem em mente.
     </p>
