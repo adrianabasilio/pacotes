@@ -87,14 +87,14 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 .card:hover { transform:translateY(-4px); box-shadow:0 16px 48px rgba(46,48,146,0.1); }
 .card-imagem { width:100%; height:180px; overflow:hidden; background:linear-gradient(135deg,var(--ceu),#a8d8f0); display:flex; align-items:center; justify-content:center; color:var(--azul); font-size:13px; letter-spacing:2px; text-transform:uppercase; }
 .card-imagem img { width:100%; height:100%; object-fit:cover; display:block; }
-.card-body { padding:20px; flex:1; display:flex; flex-direction:column; }
+.card-body { padding:20px; flex:1; display:flex; flex-direction:column; justify-content:space-between; }
 .card-destino { font-size:17px; font-weight:600; color:var(--azul); margin-bottom:3px; }
 .card-hotel { font-size:13px; color:var(--cinza-texto); margin-bottom:14px; font-weight:300; }
 .card-infos { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
 .card-info-item { display:flex; flex-direction:column; gap:2px; }
 .card-info-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--cinza-texto); }
 .card-info-valor { font-size:13px; color:var(--preto-suave); }
-.card-inclusos { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; flex:1; }
+.card-inclusos { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; align-content:flex-start; min-height:72px; }
 .tag-incluso { font-size:11px; background:var(--cinza-claro); color:var(--cinza-texto); padding:4px 10px; border-radius:20px; }
 .tag-transfer { background:#eef2ff; color:var(--azul); }
 .card-footer { border-top:1px solid var(--cinza-borda); padding-top:16px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
@@ -1056,7 +1056,7 @@ function cardHTML(p) {
       <div class="card-imagem">${img ? `<img src="${img}" alt="${p.destino}" loading="lazy"/>` : p.destino}</div>
       <div class="card-body">
         <h3 class="card-destino">${p.destino}</h3>
-        <p class="card-hotel">${p.hotel}</p>
+        ${p.hotel ? `<p class="card-hotel">${p.hotel}</p>` : ''}
         <div class="card-infos">
           <div class="card-info-item"><span class="card-info-label">Período</span><span class="card-info-valor">${periodo}</span></div>
           <div class="card-info-item"><span class="card-info-label">Duração</span><span class="card-info-valor">${p.numero_noites} noites</span></div>
