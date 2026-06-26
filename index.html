@@ -1053,11 +1053,18 @@ function limparFiltros() {
 }
 
 function ordenarPorData(lista) {
+  function dataValida(p) {
+    if (!p.periodo_inicio) return null;
+    const d = new Date(p.periodo_inicio);
+    return isNaN(d.getTime()) ? null : d;
+  }
   return [...lista].sort((a, b) => {
-    if (!a.periodo_inicio && !b.periodo_inicio) return 0;
-    if (!a.periodo_inicio) return 1;
-    if (!b.periodo_inicio) return -1;
-    return new Date(a.periodo_inicio) - new Date(b.periodo_inicio);
+    const da = dataValida(a);
+    const db = dataValida(b);
+    if (!da && !db) return 0;
+    if (!da) return 1;
+    if (!db) return -1;
+    return da - db;
   });
 }
 
