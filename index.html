@@ -74,9 +74,12 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 
 /* SEÇÃO DESTINO */
 .destino-section { margin-bottom:56px; }
-.destino-header { display:flex; align-items:center; gap:16px; margin-bottom:24px; padding-bottom:14px; border-bottom:1px solid var(--cinza-borda); }
-.destino-nome { font-size:20px; font-weight:500; color:var(--azul); }
-.destino-count { font-size:11px; color:var(--cinza-texto); letter-spacing:1.5px; text-transform:uppercase; background:var(--cinza-claro); padding:4px 10px; border-radius:20px; }
+.destino-header {
+  background:var(--azul); margin:0 -40px 24px; padding:16px 40px;
+  display:flex; align-items:center; gap:14px;
+}
+.destino-nome { font-size:16px; font-weight:600; color:var(--branco); letter-spacing:2px; text-transform:uppercase; }
+.destino-count { font-size:11px; color:var(--ceu); letter-spacing:1px; text-transform:uppercase; background:rgba(255,255,255,0.12); padding:4px 10px; border-radius:20px; }
 .cards-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:24px; }
 
 /* CARD */
@@ -256,9 +259,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
 .btn-acao { background:none; border:1px solid var(--cinza-borda); border-radius:6px; padding:6px 12px; font-family:var(--font); font-size:12px; color:var(--cinza-texto); cursor:pointer; transition:all 0.2s; }
 .btn-acao:hover { border-color:var(--azul); color:var(--azul); }
 .btn-acao.arquivar:hover { border-color:#ef4444; color:#ef4444; }
-.btn-ordem { background:none; border:1px solid var(--cinza-borda); border-radius:6px; width:30px; height:30px; font-size:14px; color:var(--cinza-texto); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
-.btn-ordem:hover { border-color:var(--azul); color:var(--azul); }
-.btn-ordem:disabled { opacity:0.3; cursor:default; }
+
 .status-dot { display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px; }
 .admin-categoria { font-size:12px; font-weight:600; color:var(--azul); letter-spacing:1.5px; text-transform:uppercase; padding:16px 0 8px; border-bottom:1px solid var(--cinza-borda); margin-bottom:10px; margin-top:20px; }
 .admin-categoria:first-child { margin-top:0; }
@@ -500,6 +501,7 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
               <label class="form-checkbox-item"><input type="checkbox" value="Café da manhã"/> Café da manhã</label>
               <label class="form-checkbox-item"><input type="checkbox" value="Meia pensão"/> Meia pensão</label>
               <label class="form-checkbox-item"><input type="checkbox" value="Pensão completa"/> Pensão completa</label>
+              <label class="form-checkbox-item"><input type="checkbox" value="All Inclusive"/> All Inclusive</label>
               <label class="form-checkbox-item"><input type="checkbox" value="Seguro viagem"/> Seguro viagem</label>
               <label class="form-checkbox-item"><input type="checkbox" value="Assistência 24h"/> Assistência 24h</label>
             </div>
@@ -511,6 +513,10 @@ body { font-family:var(--font); background:var(--branco); color:var(--preto-suav
           <div class="form-group campo-full">
             <label class="form-label">Descrição adicional</label>
             <textarea class="form-textarea" id="campo-descricao" placeholder="Detalhes do pacote para o cliente..."></textarea>
+          </div>
+          <div class="form-group campo-full">
+            <label class="form-label">Observações internas (não aparece para o cliente)</label>
+            <textarea class="form-textarea" id="campo-observacoes" placeholder="ex: Fornecedor: Orinter Tour. Negociado direto com a Bia."></textarea>
           </div>
         </div>
 
@@ -888,6 +894,8 @@ async function salvarPacote() {
     inclusos,
     informacoes_extras: document.getElementById('campo-extras').value.trim(),
     descricao: document.getElementById('campo-descricao').value.trim(),
+    observacoes: document.getElementById('campo-observacoes').value.trim(),
+    lamina_url: imagemBase64 ? `data:${imagemMediaType};base64,${imagemBase64}` : (document.getElementById('campo-id').value && modoEdicao ? undefined : null),
     imagem_url: fotosParaSalvar.length > 0 ? fotosParaSalvar[0].url : null,
     ativo: true
   };
@@ -933,7 +941,7 @@ function limparFormulario() {
   document.getElementById('campo-id').value = '';
   document.getElementById('form-titulo').textContent = 'Dados do pacote';
   document.getElementById('btn-salvar').textContent = 'Publicar pacote';
-  ['campo-destino','campo-hotel','campo-noites','campo-inicio','campo-fim','campo-preco','campo-parcelas','campo-valor-parcela','campo-extras','campo-descricao'].forEach(id => {
+  ['campo-destino','campo-hotel','campo-noites','campo-inicio','campo-fim','campo-preco','campo-parcelas','campo-valor-parcela','campo-extras','campo-descricao','campo-observacoes'].forEach(id => {
     document.getElementById(id).value = '';
   });
   document.getElementById('campo-transfer').value = 'false';
@@ -980,6 +988,7 @@ async function editarPacote(id) {
   document.getElementById('campo-nacional').value = p.nacional ? 'true' : 'false';
   document.getElementById('campo-extras').value = p.informacoes_extras || '';
   document.getElementById('campo-descricao').value = p.descricao || '';
+  document.getElementById('campo-observacoes').value = p.observacoes || '';
 
   document.querySelectorAll('#inclusos-group input').forEach(cb => {
     cb.checked = (p.inclusos||[]).includes(cb.value);
@@ -1043,12 +1052,21 @@ function limparFiltros() {
   renderizarPacotes(todosPacotes);
 }
 
+function ordenarPorData(lista) {
+  return [...lista].sort((a, b) => {
+    if (!a.periodo_inicio && !b.periodo_inicio) return 0;
+    if (!a.periodo_inicio) return 1;
+    if (!b.periodo_inicio) return -1;
+    return new Date(a.periodo_inicio) - new Date(b.periodo_inicio);
+  });
+}
+
 function renderizarPacotes(pacotes) {
   const container = document.getElementById('pacotes-container');
   if (!pacotes.length) { container.innerHTML = '<div class="empty-state"><p>Nenhum pacote encontrado.</p></div>'; return; }
-  const cruzeiros = pacotes.filter(p => p.nacional === 'cruzeiro' || p.tipo === 'cruzeiro');
-  const nacionais = pacotes.filter(p => p.nacional === true && p.tipo !== 'cruzeiro');
-  const internacionais = pacotes.filter(p => !p.nacional && p.tipo !== 'cruzeiro');
+  const cruzeiros = ordenarPorData(pacotes.filter(p => p.nacional === 'cruzeiro' || p.tipo === 'cruzeiro'));
+  const nacionais = ordenarPorData(pacotes.filter(p => p.nacional === true && p.tipo !== 'cruzeiro'));
+  const internacionais = ordenarPorData(pacotes.filter(p => !p.nacional && p.tipo !== 'cruzeiro'));
   let html = '';
   if (internacionais.length) {
     html += `<section class="destino-section">
@@ -1191,28 +1209,37 @@ async function carregarListaAdmin(ativo) {
     const lista = document.getElementById(listaId);
     if (error) { lista.innerHTML = '<p style="color:#ef4444;font-size:13px">Erro ao carregar: ' + error.message + '</p>'; return; }
     if (!data || !data.length) { lista.innerHTML = '<p style="color:var(--cinza-texto);font-size:13px">Nenhum pacote aqui ainda.</p>'; return; }
-      lista.innerHTML = data.map(p => {
-    const thumb = p.imagem_url || '';
-    return `
-      <div class="pacote-admin-item">
-        ${thumb ? `<img class="pacote-admin-thumb" src="${thumb}" alt="${p.destino}"/>` : '<div class="pacote-admin-thumb"></div>'}
-        <div class="pacote-admin-info">
-          <div class="pacote-admin-destino"><span class="status-dot" style="background:${ativo?'#16a34a':'#9ca3af'}"></span>${p.destino}</div>
-          <div class="pacote-admin-detalhe">${p.hotel} · ${p.numero_noites} noites</div>
-        </div>
-        <span class="pacote-admin-preco">R$ ${(p.preco_por_pessoa||0).toLocaleString('pt-BR',{minimumFractionDigits:0})}</span>
-        <div class="pacote-admin-acoes">
-          ${ativo ? `
-            <button class="btn-ordem" onclick="moverPacote('${p.id}', 'cima', ${ativo})" title="Subir">↑</button>
-            <button class="btn-ordem" onclick="moverPacote('${p.id}', 'baixo', ${ativo})" title="Descer">↓</button>
-          ` : ''}
-          <button class="btn-acao" onclick="editarPacote('${p.id}')">Editar</button>
-          <button class="btn-acao arquivar" onclick="arquivarPacote('${p.id}',${ativo})">${ativo?'Arquivar':'Reativar'}</button>
-          ${!ativo ? `<button class="btn-acao arquivar" onclick="excluirPacote('${p.id}')">Excluir</button>` : ''}
-        </div>
-      </div>
-    `;
-  }).join('');
+
+    const categorias = [
+      { label: '✈️ Internacional', pacotes: data.filter(p => !p.nacional && p.tipo !== 'cruzeiro') },
+      { label: '🇧🇷 Nacional', pacotes: data.filter(p => p.nacional === true && p.tipo !== 'cruzeiro') },
+      { label: '🚢 Cruzeiros', pacotes: data.filter(p => p.tipo === 'cruzeiro' || p.nacional === 'cruzeiro') }
+    ].filter(c => c.pacotes.length > 0);
+
+    lista.innerHTML = categorias.map(cat => `
+      <div class="admin-categoria">${cat.label} <span style="font-weight:300;opacity:0.6">(${cat.pacotes.length})</span></div>
+      ${cat.pacotes.map(p => {
+        const thumb = p.imagem_url || '';
+        const preco = p.preco_por_pessoa ? 'R$ ' + parseFloat(p.preco_por_pessoa).toLocaleString('pt-BR',{minimumFractionDigits:0}) : 'Consultar';
+        return `
+          <div class="pacote-admin-item" draggable="${ativo}" data-id="${p.id}">
+            ${ativo ? '<span class="drag-handle" title="Arraste para reordenar">⠿</span>' : ''}
+            ${thumb ? `<img class="pacote-admin-thumb" src="${thumb}" alt="${p.destino}" loading="lazy"/>` : '<div class="pacote-admin-thumb"></div>'}
+            <div class="pacote-admin-info">
+              <div class="pacote-admin-destino"><span class="status-dot" style="background:${ativo?'#16a34a':'#9ca3af'}"></span>${p.destino}</div>
+              <div class="pacote-admin-detalhe">${p.hotel ? p.hotel + ' · ' : ''}${p.numero_noites} noites</div>
+            </div>
+            <span class="pacote-admin-preco">${preco}</span>
+            <div class="pacote-admin-acoes">
+              <button class="btn-acao" onclick="editarPacote('${p.id}')">Editar</button>
+              <button class="btn-acao arquivar" onclick="arquivarPacote('${p.id}',${ativo})">${ativo?'Arquivar':'Reativar'}</button>
+              ${!ativo ? `<button class="btn-acao arquivar" onclick="excluirPacote('${p.id}')">Excluir</button>` : ''}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    `).join('');
+
     if (ativo) iniciarDragDrop(lista);
   } catch(e) {
     document.getElementById(loadingId).style.display = 'none';
@@ -1222,18 +1249,14 @@ async function carregarListaAdmin(ativo) {
 
 function iniciarDragDrop(container) {
   let dragged = null;
-  let savedOrdem = null;
 
   function getItems() {
     return Array.from(container.querySelectorAll('.pacote-admin-item'));
   }
 
-  function bindItem(item) {
-    item.setAttribute('draggable', 'true');
-
+  getItems().forEach(item => {
     item.addEventListener('dragstart', e => {
       dragged = item;
-      savedOrdem = getItems().map(i => i.dataset.id);
       e.dataTransfer.effectAllowed = 'move';
       setTimeout(() => item.classList.add('dragging'), 0);
     });
@@ -1260,40 +1283,20 @@ function iniciarDragDrop(container) {
       }
     });
 
-    item.addEventListener('drop', e => {
-      e.preventDefault();
-    });
-  }
-
-  getItems().forEach(bindItem);
+    item.addEventListener('drop', e => e.preventDefault());
+  });
 }
 
 async function salvarOrdemDrag(container) {
   const items = Array.from(container.querySelectorAll('.pacote-admin-item'));
-  const updates = items.map((item, idx) => ({ id: item.dataset.id, ordem: idx }));
-  for (const u of updates) {
-    await dbAdmin.from('pacotes').update({ ordem: u.ordem }).eq('id', u.id);
+  for (const [idx, item] of items.entries()) {
+    await dbAdmin.from('pacotes').update({ ordem: idx }).eq('id', item.dataset.id);
   }
-  // Feedback visual
   const feedback = document.createElement('p');
   feedback.textContent = '✓ Ordem salva';
   feedback.style.cssText = 'color:#16a34a;font-size:12px;text-align:center;margin-top:8px;';
-  container.appendChild(feedback);
+  container.parentElement.appendChild(feedback);
   setTimeout(() => feedback.remove(), 2000);
-}
-
-async function moverPacote(id, direcao, ativo) {
-  const { data } = await dbAdmin.from('pacotes').select('id, ordem').eq('ativo', ativo).order('ordem', { ascending: true }).order('created_at', { ascending: false });
-  if (!data) return;
-  const idx = data.findIndex(p => p.id === id);
-  if (direcao === 'cima' && idx === 0) return;
-  if (direcao === 'baixo' && idx === data.length - 1) return;
-  const outroIdx = direcao === 'cima' ? idx - 1 : idx + 1;
-  const ordemAtual = data[idx].ordem || idx;
-  const ordemOutro = data[outroIdx].ordem || outroIdx;
-  await dbAdmin.from('pacotes').update({ ordem: ordemOutro }).eq('id', id);
-  await dbAdmin.from('pacotes').update({ ordem: ordemAtual }).eq('id', data[outroIdx].id);
-  carregarListaAdmin(ativo);
 }
 
 async function excluirPacote(id) {
